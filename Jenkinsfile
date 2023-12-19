@@ -6,8 +6,8 @@ pipeline {
 
     environment {
         // Поміняйте APP_NAME та DOCKER_IMAGE_NAME на ваше імʼя та прізвище, відповідно.
-        APP_NAME = 'your_app_name'
-        DOCKER_IMAGE_NAME = 'your_docker_image_name'
+        APP_NAME = 'Maria'
+        DOCKER_IMAGE_NAME = 'povoroznik'
         // Необхідно для роботи в плейграунді
         GOCACHE="/home/jenkins/.cache/go-build/"
     }
@@ -16,14 +16,20 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 // Крок клонування репозиторію
-                // TODO: ваш код
+                git(
+                    url: 'https://github.com/katanchik23/jenkins-ci-lab.git',
+                    branch: "main",
+                )
             }
         }
 
         stage('Compile') {
             agent {
                 // Використання Docker образу з підтримкою Go версії 1.21.3. Обовʼязково необхідно використати параметр `reuseNode true` для Docker агента для роботи в плейграунді
-                // TODO: ваш код
+                docker{
+                    image 'golang:1.21.3'
+                    reuseNode true
+                }
             }
             steps {
                 // Компіляція проекту на мові Go. Всі ці флаги необхідні для запуску на пустій файловій системі образу scratch :)
@@ -34,11 +40,14 @@ pipeline {
         stage('Unit Testing') {
             agent {
                 // Використання Docker образу з підтримкою Go версії 1.21.3. Обовʼязково необхідно використати параметр `reuseNode true` для Docker агента для роботи в плейграунді
-                // TODO: ваш код
+                docker{
+                    image 'golang:1.21.3'
+                    reuseNode true
+                }
             }
             steps {
                 // Виконання юніт-тестів. Команду можна знайти в Google
-                // TODO: ваш код
+                sh 'go test'
             }
         }
 
@@ -47,14 +56,14 @@ pipeline {
                 stage('Archive Artifact') {
                     steps {
                         // Створення TAR-архіву артефакту з використанням імені додатку APP_NAME та номеру сборки BUILD_NUMBER
-                        // TODO: ваш код
+                        archiveArtifacts artifacts: "${APP_NAME}", fingerprint: true
                     }
                 }
 
                 stage('Build Docker Image') {
                     steps {
                         // Створення Docker образу з імʼям DOCKER_IMAGE_NAME і тегом BUILD_NUMBER та передача аргументу APP_NAME за допомогою флагу `--build-arg`
-                        // TODO: ваш код
+                        sh "docker build -f Dockerfile --build-arg 'APP_NAME=${APP_NAME}' -t ${DOCKER_IMAGE_NAME}:${BUILD_NUMBER} ."
                     }
                 }
             }
@@ -64,7 +73,7 @@ pipeline {
     post {
         success {
             // Архівація успішна, артефакт готовий для використання та збереження
-            // TODO: ваш код
+            echo 'Artifact archived successfully'
         }
         always {
             // Завершення пайплайну, можна додати додаткові кроки (наприклад, розгортання) за потребою
